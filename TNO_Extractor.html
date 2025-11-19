@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uni Dispatch Dashboard</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            850: '#1f2937',
+                            900: '#111827',
+                            950: '#030712',
+                        },
+                        slate: {
+                            850: '#1e293b',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        /* Custom scrollbar for textareas to match the theme */
+        textarea::-webkit-scrollbar {
+            width: 10px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background-color: #1f2937;
+            border-radius: 6px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background-color: #4b5563;
+            border-radius: 6px;
+            border: 2px solid #1f2937;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background-color: #6b7280;
+        }
+
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: rgba(31, 41, 55, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .input-card {
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid rgba(75, 85, 99, 0.4);
+            transition: all 0.2s ease;
+        }
+        
+        .input-card:focus-within {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Animation for the status bar */
+        @keyframes popIn {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .status-pop {
+            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-slate-900 to-black min-h-screen text-gray-100 p-4 md:p-8 selection:bg-indigo-500 selection:text-white">
+
+    <div class="max-w-7xl mx-auto space-y-8">
+        
+        <!-- Header Section -->
+        <header class="glass-panel rounded-2xl p-6 shadow-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="bg-indigo-600 p-3 rounded-xl shadow-lg shadow-indigo-500/20">
+                    <!-- Truck Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-300">
+                        Uni Dispatch Helper
+                    </h1>
+                    <p class="text-gray-400 text-sm">Optimization Tool by Peter C.</p>
+                </div>
+            </div>
+            <div class="text-right text-xs text-gray-500 hidden md:block">
+                Supported Prefixes: <span class="text-indigo-400 font-mono">UUS, 4C, MI, XDL, 2025, 2026, UNIH, GV, ONE, U9</span>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 gap-8">
+
+            <!-- SECTION 1: Input Manifest -->
+            <section class="glass-panel rounded-2xl p-1 shadow-xl">
+                <div class="bg-gray-900/80 rounded-xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center gap-2 text-indigo-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                            <h2 class="text-lg font-bold uppercase tracking-wider">1. Manifest Data</h2>
+                        </div>
+                        <button 
+                            onclick="clearAllInputs()" 
+                            class="group flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-red-400 border border-red-500/30 bg-red-500/10 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-200"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Clear All
+                        </button>
+                    </div>
+                    <textarea
+                        id="input-text"
+                        rows="8"
+                        class="w-full p-4 bg-gray-950 text-gray-300 font-mono text-sm rounded-lg border border-gray-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-y transition-colors"
+                        placeholder="Paste your raw manifest lines here..."
+                        oninput="processAllOutputs()"
+                    ></textarea>
+                </div>
+            </section>
+
+            <!-- SECTION 2, 3, 4: Output Columns -->
+            <section class="grid md:grid-cols-3 gap-6">
+                
+                <!-- Col 1: All TNOs -->
+                <div class="glass-panel rounded-2xl p-5 flex flex-col h-full">
+                    <div class="flex items-center gap-2 text-blue-400 mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                        </svg>
+                        <h3 class="font-bold text-sm uppercase tracking-wider">2. All Extracted</h3>
+                    </div>
+                    <div class="relative flex-grow">
+                        <textarea id="output-all-tno" class="w-full h-full min-h-[200px] p-3 bg-gray-900/50 text-blue-200 font-mono text-sm rounded-lg border border-gray-700 resize-none focus:outline-none" readonly placeholder="..."></textarea>
+                        <div class="absolute bottom-2 right-2 pointer-events-none">
+                            <!-- Decorative element or status indicator could go here -->
+                        </div>
+                    </div>
+                    <button onclick="copyOutput('output-all-tno')" id="copy-all-button" class="mt-3 w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-indigo-900/20 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                        <span class="btn-label">Copy All TNOs (0)</span>
+                    </button>
+                </div>
+
+                <!-- Col 2: Problems -->
+                <div class="glass-panel rounded-2xl p-5 flex flex-col h-full border-red-500/20">
+                    <div class="flex items-center gap-2 text-red-400 mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <h3 class="font-bold text-sm uppercase tracking-wider">3. Problems</h3>
+                    </div>
+                    <textarea id="output-problem-tno" class="flex-grow min-h-[200px] w-full p-3 bg-gray-900/50 text-red-300 font-mono text-sm rounded-lg border border-red-900/30 resize-none focus:outline-none" readonly placeholder="No problems detected."></textarea>
+                    <button onclick="copyOutput('output-problem-tno')" id="copy-problem-button" class="mt-3 w-full py-2.5 bg-red-600 hover:bg-red-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-red-900/20 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        <span class="btn-label">Copy Problem TNOs (0)</span>
+                    </button>
+                </div>
+
+                <!-- Col 3: UPS/MI Info -->
+                <div class="glass-panel rounded-2xl p-5 flex flex-col h-full border-teal-500/20">
+                    <div class="flex items-center gap-2 text-teal-400 mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        <h3 class="font-bold text-sm uppercase tracking-wider">4. UPS Routes</h3>
+                    </div>
+                    <textarea id="output-mi-tno" class="flex-grow min-h-[200px] w-full p-3 bg-gray-900/50 text-teal-200 font-mono text-sm rounded-lg border border-teal-900/30 resize-none focus:outline-none" readonly placeholder="UPS MI Routes..."></textarea>
+                    <button onclick="copyOutput('output-mi-tno')" id="copy-mi-button" class="mt-3 w-full py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-teal-900/20 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                        <span class="btn-label">Copy MI TNOs (0)</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- SECTION 5: Scanning Interface -->
+            <section class="glass-panel rounded-2xl p-1 shadow-2xl">
+                <div class="bg-gray-900/80 rounded-xl p-6">
+                    <div class="flex items-center gap-2 text-purple-400 mb-6 pb-4 border-b border-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                        </svg>
+                        <h2 class="text-xl font-bold uppercase tracking-wider">Live Scanning Tracker</h2>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        
+                        <!-- Left Column: Scanner Input & Alerts -->
+                        <div class="space-y-6">
+                            <div>
+                                <label for="scan-input" class="block text-sm font-semibold text-gray-400 mb-2">5a. Scan Here (Cursor Here)</label>
+                                <textarea
+                                    id="scan-input"
+                                    rows="12"
+                                    class="w-full p-4 bg-black/50 text-white font-mono text-lg rounded-xl border-2 border-gray-700 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 outline-none resize-none transition-all shadow-inner"
+                                    placeholder="Waiting for scanner input..."
+                                    oninput="trackScans()"
+                                ></textarea>
+                            </div>
+
+                            <!-- Dynamic Status Bar -->
+                            <div id="scan-status-bar" class="hidden status-pop w-full p-4 rounded-xl text-center font-black text-xl shadow-lg border-l-8 transition-all duration-200 flex items-center justify-center gap-3">
+                                <!-- Content injected by JS -->
+                            </div>
+
+                            <!-- Scanned Problems -->
+                            <div class="bg-red-900/10 border border-red-900/30 rounded-xl p-4">
+                                <label for="output-scanned-problem-tno" class="block text-xs font-bold text-red-400 uppercase mb-2">5c. Scanned Problem Packages</label>
+                                <textarea 
+                                    id="output-scanned-problem-tno" 
+                                    rows="4" 
+                                    readonly 
+                                    class="w-full p-3 bg-gray-950/50 text-red-400 font-mono text-sm rounded-lg border border-red-900/20 resize-none focus:outline-none" 
+                                    placeholder="None yet."
+                                ></textarea>
+                                <button onclick="copyOutput('output-scanned-problem-tno')" id="copy-scanned-problem-button" class="mt-2 w-full py-2 bg-red-700/80 hover:bg-red-600 text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <span class="btn-label">Copy Scanned Problem TNOs (0)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Remaining List -->
+                        <div class="flex flex-col h-full">
+                            <label for="output-remaining-tno" class="block text-sm font-semibold text-gray-400 mb-2">5b. Remaining Unscanned Packages</label>
+                            <div class="relative flex-grow">
+                                <textarea 
+                                    id="output-remaining-tno" 
+                                    rows="22" 
+                                    readonly 
+                                    class="w-full h-full p-4 bg-gray-800/50 text-lg text-green-400 font-mono rounded-xl border border-gray-700 resize-none focus:outline-none shadow-inner" 
+                                    placeholder="Waiting for manifest data..."
+                                ></textarea>
+                            </div>
+                            <button onclick="copyOutput('output-remaining-tno')" id="copy-remaining-button" class="mt-4 w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-900/20 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span class="btn-label">Copy Remaining TNOs (0)</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="message-box" class="fixed top-6 right-6 bg-gray-800 text-white px-6 py-4 rounded-xl shadow-2xl border-l-4 border-green-500 transform transition-all duration-300 translate-x-full opacity-0 flex items-center gap-3 z-50">
+            <div class="bg-green-500 rounded-full p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <div>
+                <h4 class="font-bold text-sm">Success</h4>
+                <p class="text-xs text-gray-400" id="toast-message">Copied to clipboard!</p>
+            </div>
+        </div>
+
+        <footer class="text-center text-gray-600 text-xs py-8">
+            &copy; 2025 Uni Dispatch Tools. Optimized for Chrome.
+        </footer>
+    </div>
+
+    <script>
+        // --- Global State ---
+        let fullManifestTNOs = new Set();
+        let problemTNOsSet = new Set();
+
+        // --- Regex Definitions ---
+        const TNO_REGEX = /(UUS|4C|MI|XDL|2025|2026|UNIH|GV|ONE|U9)\w+/;
+        const TNO_GLOBAL_REGEX = new RegExp(TNO_REGEX.source, 'g'); 
+
+        const PROBLEM_DRIVER_REGEX = /Driver ID: (270995|270994|270991|270999|270997)/;
+        // Includes 203, 230, and 213
+        const PROBLEM_STATE_REGEX = /State: (230|213|203)/; 
+        const SCAN_COUNTS_REGEX = /Scan Counts: (\d+)/;
+        const MI_BRACKET_REGEX = /【(.*?)】/;
+        const MI_PRIORITY_REGEX = /Suspected Apt\/Suspecté Apt.*?【(.*?)】/;
+
+        // --- UI Element References ---
+        const inputEl = document.getElementById('input-text');
+        const scanInputEl = document.getElementById('scan-input');
+        
+        const outputAllEl = document.getElementById('output-all-tno');
+        const copyAllBtn = document.getElementById('copy-all-button');
+        
+        const outputProblemEl = document.getElementById('output-problem-tno');
+        const copyProblemBtn = document.getElementById('copy-problem-button');
+        
+        const outputMiEl = document.getElementById('output-mi-tno');
+        const copyMiBtn = document.getElementById('copy-mi-button');
+
+        const outputScannedProblemEl = document.getElementById('output-scanned-problem-tno');
+        const copyScannedProblemBtn = document.getElementById('copy-scanned-problem-button');
+        
+        const outputRemainingEl = document.getElementById('output-remaining-tno');
+        const copyRemainingBtn = document.getElementById('copy-remaining-button');
+        
+        const messageBox = document.getElementById('message-box');
+        const toastMsg = document.getElementById('toast-message');
+        const statusBar = document.getElementById('scan-status-bar'); 
+
+        function segmentInput(rawText) {
+            const lines = rawText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            const blocks = [];
+            let currentBlock = null;
+
+            for (const line of lines) {
+                const tnoMatch = line.match(TNO_REGEX);
+                if (tnoMatch) {
+                    const tno = tnoMatch[0];
+                    if (currentBlock) blocks.push(currentBlock);
+                    currentBlock = { tno: tno, data: line + '\n' }; 
+                } else if (currentBlock) {
+                    currentBlock.data += line + '\n';
+                }
+            }
+            if (currentBlock) blocks.push(currentBlock);
+            return blocks;
+        }
+
+        function clearAllInputs() {
+            if(confirm("Are you sure you want to CLEAR ALL data? This will reset the tool.")) {
+                inputEl.value = '';
+                scanInputEl.value = '';
+                // Reset status bar
+                statusBar.classList.add('hidden');
+                statusBar.className = "hidden w-full p-4 mt-4 rounded-lg text-center font-black text-xl shadow-md transition-all duration-200 border-l-8 flex items-center justify-center gap-3";
+                processAllOutputs();
+            }
+        }
+
+        function processAllOutputs() {
+            const rawText = inputEl.value;
+            const blocks = segmentInput(rawText);
+
+            fullManifestTNOs.clear();
+            problemTNOsSet.clear();
+            
+            const miPackages = [];
+            const allTNOsArray = [];
+            const problemTNOsArray = [];
+
+            blocks.forEach(block => {
+                const { tno, data } = block;
+                fullManifestTNOs.add(tno);
+                allTNOsArray.push(tno);
+
+                let isProblem = false;
+
+                if (data.match(PROBLEM_DRIVER_REGEX) || data.match(PROBLEM_STATE_REGEX)) {
+                    isProblem = true;
+                }
+                
+                const scanMatch = data.match(SCAN_COUNTS_REGEX);
+                if (scanMatch) {
+                    const scanCount = parseInt(scanMatch[1], 10);
+                    if (scanCount >= 4) isProblem = true;
+                }
+                
+                if (isProblem) {
+                    problemTNOsSet.add(tno);
+                    problemTNOsArray.push(tno);
+                }
+
+                if (tno.startsWith('MI')) {
+                    let bracketMatch = data.match(MI_PRIORITY_REGEX);
+                    if (!bracketMatch) bracketMatch = data.match(MI_BRACKET_REGEX);
+                    
+                    let outputLine = tno;
+                    if (bracketMatch && bracketMatch[1]) {
+                        outputLine += ` 【${bracketMatch[1].trim()}】`;
+                    }
+                    miPackages.push(outputLine);
+                }
+            });
+
+            outputAllEl.value = [...new Set(allTNOsArray)].join('\n');
+            updateButton(copyAllBtn, 'All TNOs', allTNOsArray.length);
+
+            outputProblemEl.value = [...problemTNOsSet].join('\n');
+            updateButton(copyProblemBtn, 'Problem TNOs', problemTNOsSet.size);
+
+            outputMiEl.value = [...new Set(miPackages)].join('\n\n');
+            updateButton(copyMiBtn, 'MI TNOs', miPackages.length);
+            
+            trackScans();
+        }
+
+        function trackScans() {
+            const scannedRaw = scanInputEl.value;
+            const scanLines = scannedRaw.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            const scannedTNOs = new Set(scanLines);
+
+            const remainingProblems = [];
+            const remainingNormal = [];
+            const scannedProblemTNOs = [];
+            
+            const lastTNO = scanLines.length > 0 ? scanLines[scanLines.length - 1] : null;
+            
+            if (lastTNO) {
+                statusBar.classList.remove('hidden');
+                
+                // Reset basic classes + maintain layout classes
+                statusBar.className = "status-pop w-full p-4 rounded-xl text-center font-black text-xl shadow-lg border-l-8 transition-all duration-200 flex items-center justify-center gap-3";
+
+                if (!fullManifestTNOs.has(lastTNO)) {
+                    // UNKNOWN (RED)
+                    statusBar.classList.add('bg-red-900/80', 'text-white', 'border-red-500');
+                    statusBar.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span>⛔ UNKNOWN: ${lastTNO}</span>`;
+                } else if (problemTNOsSet.has(lastTNO)) {
+                    // PROBLEM (YELLOW)
+                    statusBar.classList.add('bg-yellow-500', 'text-black', 'border-yellow-300');
+                    statusBar.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        <span>⚠️ PROBLEM: ${lastTNO}</span>`;
+                } else {
+                    // OK (GREEN)
+                    statusBar.classList.add('bg-green-600', 'text-white', 'border-green-400');
+                    statusBar.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span>✅ OK: ${lastTNO}</span>`;
+                }
+            } else {
+                statusBar.classList.add('hidden');
+            }
+
+            if (fullManifestTNOs.size === 0) {
+                outputRemainingEl.value = 'Waiting for manifest data...';
+                outputRemainingEl.className = "w-full h-full p-4 bg-gray-800/50 text-lg text-gray-500 font-mono rounded-xl border border-gray-700 resize-none focus:outline-none shadow-inner italic";
+
+                outputScannedProblemEl.value = '';
+                updateButton(copyRemainingBtn, 'Remaining TNOs', 0);
+                updateButton(copyScannedProblemBtn, 'Scanned Problem TNOs', 0);
+                return;
+            }
+
+            fullManifestTNOs.forEach(tno => {
+                const isProblem = problemTNOsSet.has(tno);
+                const isScanned = scannedTNOs.has(tno);
+
+                if (!isScanned) {
+                    if (isProblem) {
+                        remainingProblems.push(`🚨 ${tno}`);
+                    } else {
+                        remainingNormal.push(tno);
+                    }
+                } else if (isScanned && isProblem) {
+                    scannedProblemTNOs.push(tno);
+                }
+            });
+
+            const finalRemainingList = [...remainingProblems, ...remainingNormal];
+
+            if (finalRemainingList.length === 0) {
+                outputRemainingEl.value = '✨ ALL CLEAR — GOOD JOB! ✨';
+                outputRemainingEl.className = "w-full h-full p-4 bg-green-900/20 text-2xl text-green-400 font-bold font-mono rounded-xl border border-green-500/50 resize-none focus:outline-none shadow-inner text-center flex items-center justify-center pt-20";
+            } else {
+                outputRemainingEl.value = finalRemainingList.join('\n');
+                outputRemainingEl.className = "w-full h-full p-4 bg-gray-800/50 text-lg text-green-400 font-mono rounded-xl border border-gray-700 resize-none focus:outline-none shadow-inner";
+            }
+            updateButton(copyRemainingBtn, 'Remaining TNOs', finalRemainingList.length);
+            
+            outputScannedProblemEl.value = scannedProblemTNOs.join('\n');
+            updateButton(copyScannedProblemBtn, 'Scanned Problem TNOs', scannedProblemTNOs.length);
+        }
+
+        function updateButton(button, name, count) {
+            button.disabled = count === 0;
+            // Updated logic: Target specifically the .btn-label span to avoid duplication
+            const labelSpan = button.querySelector('.btn-label');
+            if (labelSpan) {
+                labelSpan.textContent = `Copy ${name} (${count})`;
+            }
+        }
+
+        function copyOutput(elementId) {
+            const element = document.getElementById(elementId);
+            const content = element.value;
+            if (!content || content.includes('Waiting for') || content.includes('ALL CLEAR')) return; 
+
+            let contentToCopy = content;
+            if (elementId === 'output-remaining-tno') {
+                contentToCopy = content.split('\n').map(line => line.replace('🚨 ', '')).join('\n');
+            }
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(contentToCopy).then(() => {
+                    showMessage('Copied to clipboard!');
+                }).catch(err => {
+                    console.error('Copy error: ', err);
+                    fallbackCopy(contentToCopy);
+                });
+            } else {
+                fallbackCopy(contentToCopy);
+            }
+        }
+        
+        function fallbackCopy(text) {
+             const tempInput = document.createElement('textarea');
+             tempInput.value = text;
+             document.body.appendChild(tempInput);
+             tempInput.select();
+             try {
+                document.execCommand('copy');
+                showMessage('Copied to clipboard (Fallback)!');
+             } catch (err) {
+                showMessage('Failed to copy. Manual copy required.');
+             }
+             document.body.removeChild(tempInput);
+        }
+
+        function showMessage(msg) {
+            toastMsg.textContent = msg;
+            messageBox.classList.remove('translate-x-full', 'opacity-0');
+            
+            setTimeout(() => {
+                messageBox.classList.add('translate-x-full', 'opacity-0');
+            }, 2000);
+        }
+
+        window.onload = processAllOutputs;
+    </script>
+</body>
+</html>
