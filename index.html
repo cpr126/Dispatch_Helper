@@ -96,7 +96,7 @@
                     <h1 class="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-300">
                         Uni Dispatch Helper
                     </h1>
-                    <p class="text-gray-400 text-sm">Optimization Tool by Peter C.</p>
+                    <p class="text-gray-400 text-sm">Dispatch Tool by Peter C.</p>
                 </div>
             </div>
             <div class="text-right text-xs text-gray-500 hidden md:block">
@@ -201,10 +201,10 @@
                         <h2 class="text-xl font-bold uppercase tracking-wider">Live Scanning Tracker</h2>
                     </div>
 
-                    <div class="grid md:grid-cols-2 gap-8">
+                    <div class="grid md:grid-cols-2 gap-8 items-end">
                         
                         <!-- Left Column: Scanner Input & Alerts -->
-                        <div class="space-y-6">
+                        <div class="space-y-6 flex flex-col h-full">
                             <div>
                                 <label for="scan-input" class="block text-sm font-semibold text-gray-400 mb-2">5a. Scan Here (Cursor Here)</label>
                                 <textarea
@@ -222,7 +222,7 @@
                             </div>
 
                             <!-- Scanned Problems -->
-                            <div class="bg-red-900/10 border border-red-900/30 rounded-xl p-4">
+                            <div class="bg-red-900/10 border border-red-900/30 rounded-xl p-4 mt-auto">
                                 <label for="output-scanned-problem-tno" class="block text-xs font-bold text-red-400 uppercase mb-2">5c. Scanned Problem Packages</label>
                                 <textarea 
                                     id="output-scanned-problem-tno" 
@@ -274,7 +274,7 @@
         </div>
 
         <footer class="text-center text-gray-600 text-xs py-8">
-            &copy; 2025 Uni Dispatch Tools. Optimized for Chrome.
+            &copy; 2025 Uni Dispatch Tools, made with love and passion.
         </footer>
     </div>
 
@@ -287,10 +287,10 @@
         const TNO_REGEX = /(UUS|4C|MI|XDL|2025|2026|UNIH|GV|ONE|U9)\w+/;
         const TNO_GLOBAL_REGEX = new RegExp(TNO_REGEX.source, 'g'); 
 
-        const PROBLEM_DRIVER_REGEX = /Driver ID: (270995|270994|270991|270999|270997)/;
+        const PROBLEM_DRIVER_REGEX = /Driver ID: \s*(270990|270991|270993|270994|270995|270997|270999)/;
         // Includes 203, 230, and 213
-        const PROBLEM_STATE_REGEX = /State: (230|213|203)/; 
-        const SCAN_COUNTS_REGEX = /Scan Counts: (\d+)/;
+        const PROBLEM_STATE_REGEX = /State: \s*(230|213|203|190|206)/; 
+        const SCAN_COUNTS_REGEX = /Scan Counts: \s*(\d+)/;
         const MI_BRACKET_REGEX = /【(.*?)】/;
         const MI_PRIORITY_REGEX = /Suspected Apt\/Suspecté Apt.*?【(.*?)】/;
 
@@ -372,7 +372,18 @@
                 const scanMatch = data.match(SCAN_COUNTS_REGEX);
                 if (scanMatch) {
                     const scanCount = parseInt(scanMatch[1], 10);
-                    if (scanCount >= 4) isProblem = true;
+                    if (scanCount >= 3) isProblem = true;
+                }
+                
+                if (isProblem) {
+                    problemTNOsSet.add(tno);
+                    problemTNOsArray.push(tno);
+                }
+                if (tno.startsWith('MI')) {
+                    isProblem = true;
+                    // Ensure it gets added to the problem sets, even if other problem conditions weren't met
+                    problemTNOsSet.add(tno);
+                    problemTNOsArray.push(tno);
                 }
                 
                 if (isProblem) {
@@ -415,34 +426,57 @@
             
             const lastTNO = scanLines.length > 0 ? scanLines[scanLines.length - 1] : null;
             
+            // --- MODIFIED CODE: Keep status bar visible (CONSTANT) ---
+            statusBar.classList.remove('hidden');
+            
+            // Reset basic classes + maintain layout classes
+            statusBar.className = "status-pop w-full p-4 rounded-xl text-center font-black text-xl shadow-lg border-l-8 transition-all duration-200 flex items-center justify-center gap-3";
+
+            if (!lastTNO) {
+                // STATUS: Waiting (GRAY/PURPLE)
+                statusBar.classList.add('bg-gray-800/80', 'text-purple-400', 'border-purple-500');
+                statusBar.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>👀 WAITING FOR SCAN...</span>`;
+                // Stop further processing if no scan input
+                // But still proceed to update remaining list based on existing scans
+            }
+            
             if (lastTNO) {
-                statusBar.classList.remove('hidden');
-                
-                // Reset basic classes + maintain layout classes
-                statusBar.className = "status-pop w-full p-4 rounded-xl text-center font-black text-xl shadow-lg border-l-8 transition-all duration-200 flex items-center justify-center gap-3";
+                // B. MI Package Highlight & Status Logic
+                const isMi = lastTNO.startsWith('MI');
 
                 if (!fullManifestTNOs.has(lastTNO)) {
-                    // UNKNOWN (RED)
+                    // STATUS: UNKNOWN (RED)
                     statusBar.classList.add('bg-red-900/80', 'text-white', 'border-red-500');
                     statusBar.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <span>⛔ UNKNOWN: ${lastTNO}</span>`;
+                        <span>⛔ NOT IN LIST: ${lastTNO}</span>`;
+                } else if (isMi) {
+                     // STATUS: MI (YELLOW/TEAL - since MI output is teal, let's make the alert yellow for problems)
+                    statusBar.classList.add('bg-teal-600/80', 'text-white', 'border-teal-400');
+                    statusBar.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                        <span>📦 UPS: ${lastTNO}</span>`;
                 } else if (problemTNOsSet.has(lastTNO)) {
-                    // PROBLEM (YELLOW)
+                    // STATUS: PROBLEM (YELLOW) - Only non-MI problems fall here now
                     statusBar.classList.add('bg-yellow-500', 'text-black', 'border-yellow-300');
                     statusBar.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                         <span>⚠️ PROBLEM: ${lastTNO}</span>`;
                 } else {
-                    // OK (GREEN)
+                    // STATUS: OK (GREEN)
                     statusBar.classList.add('bg-green-600', 'text-white', 'border-green-400');
                     statusBar.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         <span>✅ OK: ${lastTNO}</span>`;
                 }
-            } else {
-                statusBar.classList.add('hidden');
             }
+
+            // Note: The rest of the trackScans function (checking remaining packages) does not need changes, 
+            // as it relies on `problemTNOsSet`, which we updated in `processAllOutputs()`.
+            
+// ... rest of the function ...
 
             if (fullManifestTNOs.size === 0) {
                 outputRemainingEl.value = 'Waiting for manifest data...';
