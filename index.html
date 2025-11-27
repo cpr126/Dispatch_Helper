@@ -201,34 +201,37 @@
                         <h2 class="text-xl font-bold uppercase tracking-wider">Live Scanning Tracker</h2>
                     </div>
 
+                    <!-- Main container for columns 5a/5c and 5b -->
                     <div class="grid md:grid-cols-2 gap-8 items-end">
                         
-                        <!-- Left Column: Scanner Input & Alerts -->
+                        <!-- Left Column: Scanner Input (5a), Status, Scanned Problems (5c) -->
                         <div class="space-y-6 flex flex-col h-full">
-                            <div>
+                            
+                            <!-- 5a. Scan Input Area -->
+                            <div class="flex flex-col flex-grow"> <!-- Added flex-col flex-grow for internal height control -->
                                 <label for="scan-input" class="block text-sm font-semibold text-gray-400 mb-2">5a. Scan Here (Cursor Here)</label>
                                 <textarea
                                     id="scan-input"
                                     rows="12"
-                                    class="w-full p-4 bg-black/50 text-white font-mono text-lg rounded-xl border-2 border-gray-700 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 outline-none resize-none transition-all shadow-inner"
+                                    class="w-full p-4 bg-black/50 text-white font-mono text-lg rounded-xl border-2 border-gray-700 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 outline-none resize-none transition-all shadow-inner flex-grow"
                                     placeholder="Waiting for scanner input..."
                                     oninput="trackScans()"
                                 ></textarea>
                             </div>
 
                             <!-- Dynamic Status Bar -->
-                            <div id="scan-status-bar" class="hidden status-pop w-full p-4 rounded-xl text-center font-black text-xl shadow-lg border-l-8 transition-all duration-200 flex items-center justify-center gap-3">
-                                <!-- Content injected by JS -->
+                            <div id="scan-status-bar" class="status-pop w-full p-4 rounded-xl text-center font-black text-xl shadow-lg border-l-8 transition-all duration-200 flex items-center justify-center gap-3">
+                                <!-- Content injected by JS. Hidden class removed to keep it constant -->
                             </div>
 
-                            <!-- Scanned Problems -->
+                            <!-- 5c. Scanned Problems (mt-auto pushes this container to the bottom) -->
                             <div class="bg-red-900/10 border border-red-900/30 rounded-xl p-4 mt-auto">
-                                <label for="output-scanned-problem-tno" class="block text-xs font-bold text-red-400 uppercase mb-2">5c. Scanned Problem Packages</label>
+                                <label for="output-scanned-problem-tno" class="block text-xs font-bold text-red-400 uppercase mb-2">5c. Scanned Problem Packages (TNO : Reason)</label>
                                 <textarea 
                                     id="output-scanned-problem-tno" 
                                     rows="4" 
                                     readonly 
-                                    class="w-full p-3 bg-gray-950/50 text-red-400 font-mono text-sm rounded-lg border border-red-900/20 resize-none focus:outline-none" 
+                                    class="w-full p-3 bg-gray-950/50 text-yellow-400 font-mono text-sm rounded-lg border border-red-900/20 resize-none focus:outline-none" 
                                     placeholder="None yet."
                                 ></textarea>
                                 <button onclick="copyOutput('output-scanned-problem-tno')" id="copy-scanned-problem-button" class="mt-2 w-full py-2 bg-red-700/80 hover:bg-red-600 text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
@@ -237,7 +240,7 @@
                             </div>
                         </div>
 
-                        <!-- Right Column: Remaining List -->
+                        <!-- Right Column: Remaining List (5b) -->
                         <div class="flex flex-col h-full">
                             <label for="output-remaining-tno" class="block text-sm font-semibold text-gray-400 mb-2">5b. Remaining Unscanned Packages</label>
                             <div class="relative flex-grow">
@@ -254,6 +257,43 @@
                             </button>
                         </div>
 
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 6: Problem TNO Lookup (New Section) -->
+            <section class="glass-panel rounded-2xl p-1 shadow-xl">
+                <div class="bg-gray-900/80 rounded-xl p-6">
+                    <div class="flex items-center gap-2 text-yellow-400 mb-4 pb-4 border-b border-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <h2 class="text-xl font-bold uppercase tracking-wider">6. Problem TNO Lookup</h2>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                             <label for="lookup-input" class="block text-sm font-semibold text-gray-400 mb-1">Enter TNO to check reason:</label>
+                             <input
+                                id="lookup-input"
+                                type="text"
+                                class="w-full p-3 bg-gray-950/50 text-white font-mono text-base rounded-lg border border-gray-700 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none transition-colors"
+                                placeholder="E.g., UUS12345678"
+                                oninput="lookupTNO()"
+                                onkeydown="if(event.key === 'Enter') lookupTNO()"
+                            />
+                        </div>
+
+                        <div class="md:col-span-2">
+                             <label for="lookup-output" class="block text-sm font-semibold text-gray-400 mb-1">Result / Reason:</label>
+                             <textarea 
+                                id="lookup-output"
+                                rows="2" 
+                                readonly 
+                                class="w-full p-3 bg-gray-950/50 text-yellow-300 font-mono text-base rounded-lg border border-yellow-900/30 resize-none focus:outline-none" 
+                                placeholder="Start typing or paste a TNO..."
+                            ></textarea>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -282,14 +322,17 @@
         // --- Global State ---
         let fullManifestTNOs = new Set();
         let problemTNOsSet = new Set();
+        // NEW: Map to store problem TNO reasons: TNO -> Reason String
+        let problemTNOReasons = new Map();
 
         // --- Regex Definitions ---
         const TNO_REGEX = /(UUS|4C|MI|XDL|2025|2026|UNIH|GV|ONE|U9)\w+/;
         const TNO_GLOBAL_REGEX = new RegExp(TNO_REGEX.source, 'g'); 
 
-        const PROBLEM_DRIVER_REGEX = /Driver ID:\s*(?:270990|270991|270993|270994|270995|270997|270999|640990|640991|640993|640994|640995|640997|640999|300990|300991|300993|300994|300995|300997|300999|550990|550991|550993|550994|550995|550997|550999|560990|560991|560993|560994|560995|560997|560999|750990|750991|750993|750994|750995|750997|750999|780990|780991|780993|780994|780995|780997|780999)/;
+        // Match Driver IDs for problems
+        const PROBLEM_DRIVER_REGEX = /Driver ID:\s*(270990|270991|270993|270994|270995|270997|270999|640990|640991|640993|640994|640995|640997|640999|300990|300991|300993|300994|300995|300997|300999|550990|550991|550993|550994|550995|550997|550999|560990|560991|560993|560994|560995|560997|560999|750990|750991|750993|750994|750995|750997|750999|780990|780991|780993|780994|780995|780997|780999)/;
         
-        // Includes 203, 206, 190, 230, and 213
+        // Includes 230 (Wrong State), 213, 203, 190, 206
         const PROBLEM_STATE_REGEX = /State: \s*(230|213|203|190|206)/; 
         const SCAN_COUNTS_REGEX = /Scan Counts: \s*(\d+)/;
         const MI_BRACKET_REGEX = /【(.*?)】/;
@@ -317,6 +360,11 @@
         const messageBox = document.getElementById('message-box');
         const toastMsg = document.getElementById('toast-message');
         const statusBar = document.getElementById('scan-status-bar'); 
+        
+        // NEW Lookup UI Elements
+        const lookupInputEl = document.getElementById('lookup-input');
+        const lookupOutputEl = document.getElementById('lookup-output');
+
 
         function segmentInput(rawText) {
             const lines = rawText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
@@ -338,22 +386,41 @@
         }
 
         function clearAllInputs() {
-            if(confirm("Are you sure you want to CLEAR ALL data? This will reset the tool.")) {
-                inputEl.value = '';
-                scanInputEl.value = '';
-                // Reset status bar
-                statusBar.classList.add('hidden');
-                statusBar.className = "hidden w-full p-4 mt-4 rounded-lg text-center font-black text-xl shadow-md transition-all duration-200 border-l-8 flex items-center justify-center gap-3";
-                processAllOutputs();
-            }
+            // FIX 2: Ensure all state is reset before calling processAllOutputs to update UI
+            
+            // Clear inputs
+            inputEl.value = '';
+            scanInputEl.value = '';
+            lookupInputEl.value = '';
+            lookupOutputEl.value = '';
+            
+            // Clear global sets/maps explicitly
+            fullManifestTNOs.clear();
+            problemTNOsSet.clear();
+            problemTNOReasons.clear();
+            
+            // Reset status bar explicitly to the initial waiting state appearance
+            statusBar.classList.remove('bg-yellow-500', 'text-black', 'border-yellow-300', 'bg-green-600', 'text-white', 'border-green-400', 'bg-teal-600/80', 'text-white', 'border-teal-400', 'bg-indigo-900/80', 'text-indigo-300', 'border-indigo-500');
+            statusBar.classList.add('bg-gray-800/80', 'text-purple-400', 'border-purple-500');
+            statusBar.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span>👀 WAITING FOR SCAN...</span>`;
+
+            // Call processAllOutputs to update all output fields and button states based on empty input
+            processAllOutputs();
+
+            // Display success message
+            showMessage('All data cleared.', 'red'); 
         }
 
         function processAllOutputs() {
             const rawText = inputEl.value;
             const blocks = segmentInput(rawText);
 
+            // Re-clear global state (redundant but ensures fresh start if called from outside clearAllInputs)
             fullManifestTNOs.clear();
             problemTNOsSet.clear();
+            problemTNOReasons.clear(); 
             
             const miPackages = [];
             const allTNOsArray = [];
@@ -365,34 +432,56 @@
                 allTNOsArray.push(tno);
 
                 let isProblem = false;
+                let problemReason = ''; // reason storage
 
-                if (data.match(PROBLEM_DRIVER_REGEX) || data.match(PROBLEM_STATE_REGEX)) {
+                // 1. Check for Problem Driver ID
+                const driverMatch = data.match(PROBLEM_DRIVER_REGEX);
+                if (driverMatch) {
                     isProblem = true;
+                    // driverMatch[1] holds the captured driver ID
+                    problemReason = `driver: ${driverMatch[1]}`;
                 }
                 
+                // 2. Check for Problem State Code (only if not already a problem, or append)
+                const stateMatch = data.match(PROBLEM_STATE_REGEX);
+                if (stateMatch) {
+                    isProblem = true;
+                    // stateMatch[1] holds the captured state code
+                    problemReason += problemReason ? ` | state: ${stateMatch[1]}` : `state: ${stateMatch[1]}`;
+                }
+                
+                // 3. Check for High Scan Count (only if not already a problem, or append)
                 const scanMatch = data.match(SCAN_COUNTS_REGEX);
                 if (scanMatch) {
                     const scanCount = parseInt(scanMatch[1], 10);
-                    if (scanCount >= 3) isProblem = true;
+                    if (scanCount >= 3) {
+                        isProblem = true;
+                        problemReason += problemReason ? ` | scans: ${scanCount}` : `scans: ${scanCount}`;
+                    }
                 }
                 
-                if (isProblem) {
-                    problemTNOsSet.add(tno);
-                    problemTNOsArray.push(tno);
-                }
-                if (tno.startsWith('MI')) {
+                // 4. Check for Mail Innovations (MI)
+                const isMi = tno.startsWith('MI');
+                if (isMi) {
                     isProblem = true;
-                    // Ensure it gets added to the problem sets, even if other problem conditions weren't met
-                    problemTNOsSet.add(tno);
-                    problemTNOsArray.push(tno);
+                    // Note: We prioritize the problem codes if they exist, but always mark MI as a problem
+                    if (!problemReason) {
+                        problemReason = 'MI package';
+                    } else {
+                        // If it's MI and already has a reason, we just ensure MI is the final reason
+                        problemReason += ' | MI package';
+                    }
                 }
                 
+                // Finalize Problem Status
                 if (isProblem) {
                     problemTNOsSet.add(tno);
                     problemTNOsArray.push(tno);
+                    // Store the reason for later use in Section 5c and Lookup
+                    problemTNOReasons.set(tno, problemReason);
                 }
 
-                if (tno.startsWith('MI')) {
+                if (isMi) {
                     let bracketMatch = data.match(MI_PRIORITY_REGEX);
                     if (!bracketMatch) bracketMatch = data.match(MI_BRACKET_REGEX);
                     
@@ -413,6 +502,8 @@
             outputMiEl.value = [...new Set(miPackages)].join('\n\n');
             updateButton(copyMiBtn, 'MI TNOs', miPackages.length);
             
+            // Re-run lookup in case manifest data changed while input was populated
+            lookupTNO(); 
             trackScans();
         }
 
@@ -423,7 +514,8 @@
 
             const remainingProblems = [];
             const remainingNormal = [];
-            const scannedProblemTNOs = [];
+            // Array to store TNOs with reasons for 5c
+            const scannedProblemOutputLines = [];
             
             const lastTNO = scanLines.length > 0 ? scanLines[scanLines.length - 1] : null;
             
@@ -439,32 +531,34 @@
                 statusBar.innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     <span>👀 WAITING FOR SCAN...</span>`;
-                // Stop further processing if no scan input
-                // But still proceed to update remaining list based on existing scans
             }
             
             if (lastTNO) {
                 // B. MI Package Highlight & Status Logic
                 const isMi = lastTNO.startsWith('MI');
+                const isProblem = problemTNOsSet.has(lastTNO);
+                
+                // Get the reason for this TNO if it exists
+                const reason = problemTNOReasons.get(lastTNO);
 
                 if (!fullManifestTNOs.has(lastTNO)) {
-                    // STATUS: UNKNOWN (RED)
-                    statusBar.classList.add('bg-red-900/80', 'text-white', 'border-red-500');
+                    // STATUS: NOT IN LIST (INDIGO/BLUE) - Less severe color
+                    statusBar.classList.add('bg-indigo-900/80', 'text-indigo-300', 'border-indigo-500');
                     statusBar.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <span>⛔ NOT IN LIST: ${lastTNO}</span>`;
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span>ℹ️ NOT IN LIST: ${lastTNO}</span>`;
                 } else if (isMi) {
-                     // STATUS: MI (YELLOW/TEAL - since MI output is teal, let's make the alert yellow for problems)
-                    statusBar.classList.add('bg-teal-600/80', 'text-white', 'border-teal-400');
+                     // STATUS: MI (YELLOW)
+                    statusBar.classList.add('bg-yellow-500', 'text-black', 'border-yellow-300'); // Yellow highlight for problem/MI
                     statusBar.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
-                        <span>📦 UPS: ${lastTNO}</span>`;
-                } else if (problemTNOsSet.has(lastTNO)) {
-                    // STATUS: PROBLEM (YELLOW) - Only non-MI problems fall here now
+                        <span>⚠️ MI PACKAGE: ${lastTNO}</span>`;
+                } else if (isProblem) {
+                    // STATUS: PROBLEM (YELLOW) - For non-MI problems
                     statusBar.classList.add('bg-yellow-500', 'text-black', 'border-yellow-300');
                     statusBar.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                        <span>⚠️ PROBLEM: ${lastTNO}</span>`;
+                        <span>⚠️ PROBLEM: ${lastTNO} (${reason})</span>`; // Display reason on scan
                 } else {
                     // STATUS: OK (GREEN)
                     statusBar.classList.add('bg-green-600', 'text-white', 'border-green-400');
@@ -474,16 +568,11 @@
                 }
             }
 
-            // Note: The rest of the trackScans function (checking remaining packages) does not need changes, 
-            // as it relies on `problemTNOsSet`, which we updated in `processAllOutputs()`.
-            
-// ... rest of the function ...
-
             if (fullManifestTNOs.size === 0) {
                 outputRemainingEl.value = 'Waiting for manifest data...';
                 outputRemainingEl.className = "w-full h-full p-4 bg-gray-800/50 text-lg text-gray-500 font-mono rounded-xl border border-gray-700 resize-none focus:outline-none shadow-inner italic";
 
-                outputScannedProblemEl.value = '';
+                outputScannedProblemEl.value = 'None yet.';
                 updateButton(copyRemainingBtn, 'Remaining TNOs', 0);
                 updateButton(copyScannedProblemBtn, 'Scanned Problem TNOs', 0);
                 return;
@@ -500,7 +589,9 @@
                         remainingNormal.push(tno);
                     }
                 } else if (isScanned && isProblem) {
-                    scannedProblemTNOs.push(tno);
+                    // Collect TNO and Reason for Section 5c
+                    const reason = problemTNOReasons.get(tno) || 'Unknown Problem';
+                    scannedProblemOutputLines.push(`${tno} : ${reason}`);
                 }
             });
 
@@ -515,9 +606,46 @@
             }
             updateButton(copyRemainingBtn, 'Remaining TNOs', finalRemainingList.length);
             
-            outputScannedProblemEl.value = scannedProblemTNOs.join('\n');
-            updateButton(copyScannedProblemBtn, 'Scanned Problem TNOs', scannedProblemTNOs.length);
+            // Output scanned problem lines with reasons
+            outputScannedProblemEl.value = scannedProblemOutputLines.join('\n');
+            if (scannedProblemOutputLines.length === 0) {
+                 outputScannedProblemEl.value = 'None yet.';
+            }
+
+            updateButton(copyScannedProblemBtn, 'Scanned Problem TNOs', scannedProblemOutputLines.length);
         }
+
+        // NEW: Function to handle the TNO lookup
+        function lookupTNO() {
+            const tno = lookupInputEl.value.trim().toUpperCase();
+            
+            // Clear previous output if input is empty
+            if (tno.length === 0) {
+                lookupOutputEl.value = "Start typing or paste a TNO...";
+                return;
+            }
+            
+            // 1. Check if it's a known problem TNO
+            const reason = problemTNOReasons.get(tno);
+
+            if (reason) {
+                lookupOutputEl.value = `STATUS: PROBLEM (Reason: ${reason})`;
+                lookupOutputEl.className = "w-full p-3 bg-gray-950/50 text-yellow-300 font-mono text-base rounded-lg border border-yellow-500/50 resize-none focus:outline-none";
+                return;
+            }
+            
+            // 2. Check if it's in the manifest but NOT a problem
+            if (fullManifestTNOs.has(tno)) {
+                lookupOutputEl.value = "STATUS: OK (Package is on manifest and not flagged as a problem).";
+                 lookupOutputEl.className = "w-full p-3 bg-gray-950/50 text-green-400 font-mono text-base rounded-lg border border-green-500/50 resize-none focus:outline-none";
+                return;
+            }
+
+            // 3. Not in manifest (Unknown)
+            lookupOutputEl.value = `STATUS: UNKNOWN (TNO ${tno} was not found in the manifest data.)`;
+            lookupOutputEl.className = "w-full p-3 bg-gray-950/50 text-indigo-300 font-mono text-base rounded-lg border border-indigo-500/50 resize-none focus:outline-none";
+        }
+
 
         function updateButton(button, name, count) {
             button.disabled = count === 0;
@@ -528,13 +656,39 @@
             }
         }
 
+        // Generic Toast Message function (since we can't use alert/confirm)
+        function showMessage(msg, type = 'green') {
+            const icon = type === 'red' ? 
+                `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>` :
+                `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>`;
+            
+            messageBox.classList.remove('translate-x-full', 'opacity-0', 'border-green-500', 'border-red-500', 'border-indigo-500'); // Added indigo
+            const iconContainer = messageBox.querySelector('div.bg-green-500');
+            iconContainer.className = `bg-${type}-500 rounded-full p-1`;
+            messageBox.classList.add(`border-${type}-500`);
+
+            toastMsg.textContent = msg;
+            messageBox.innerHTML = `
+                <div class="bg-${type}-500 rounded-full p-1">${icon}</div>
+                <div>
+                    <h4 class="font-bold text-sm">${type === 'green' ? 'Success' : 'Attention'}</h4>
+                    <p class="text-xs text-gray-400" id="toast-message">${msg}</p>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                messageBox.classList.add('translate-x-full', 'opacity-0');
+            }, 2000);
+        }
+
         function copyOutput(elementId) {
             const element = document.getElementById(elementId);
             const content = element.value;
-            if (!content || content.includes('Waiting for') || content.includes('ALL CLEAR')) return; 
+            if (!content || content.includes('Waiting for') || content.includes('ALL CLEAR') || content.includes('None yet.')) return; 
 
             let contentToCopy = content;
             if (elementId === 'output-remaining-tno') {
+                // Remove the '🚨 ' prefix before copying remaining TNOs
                 contentToCopy = content.split('\n').map(line => line.replace('🚨 ', '')).join('\n');
             }
 
@@ -559,18 +713,9 @@
                 document.execCommand('copy');
                 showMessage('Copied to clipboard (Fallback)!');
              } catch (err) {
-                showMessage('Failed to copy. Manual copy required.');
+                showMessage('Failed to copy. Manual copy required.', 'red');
              }
              document.body.removeChild(tempInput);
-        }
-
-        function showMessage(msg) {
-            toastMsg.textContent = msg;
-            messageBox.classList.remove('translate-x-full', 'opacity-0');
-            
-            setTimeout(() => {
-                messageBox.classList.add('translate-x-full', 'opacity-0');
-            }, 2000);
         }
 
         window.onload = processAllOutputs;
