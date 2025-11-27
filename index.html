@@ -100,7 +100,7 @@
                 </div>
             </div>
             <div class="text-right text-xs text-gray-500 hidden md:block">
-                Supported Prefixes: <span class="text-indigo-400 font-mono">UUS, 4C, MI, XDL, 2025, 2026, UNIH, GV, ONE, U9</span>
+                Supported Prefixes: <span class="text-indigo-400 font-mono">UUS, 4C, MI, XDL, 2025, 2026, UNIH, GV, ONE, U9, SKY</span>
             </div>
         </header>
 
@@ -326,7 +326,7 @@
         let problemTNOReasons = new Map();
 
         // --- Regex Definitions ---
-        const TNO_REGEX = /(UUS|4C|MI|XDL|2025|2026|UNIH|GV|ONE|U9)\w+/;
+        const TNO_REGEX = /(UUS|4C|MI|XDL|2025|2026|UNIH|GV|ONE|U9|SKY)\w+/;
         const TNO_GLOBAL_REGEX = new RegExp(TNO_REGEX.source, 'g'); 
 
         // Match Driver IDs for problems
