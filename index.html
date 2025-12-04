@@ -226,7 +226,7 @@
 
                             <!-- 5c. Scanned Problems (mt-auto pushes this container to the bottom) -->
                             <div class="bg-red-900/10 border border-red-900/30 rounded-xl p-4 mt-auto">
-                                <label for="output-scanned-problem-tno" class="block text-xs font-bold text-red-400 uppercase mb-2">5c. Scanned Problem Packages (TNO : Reason)</label>
+                                <label for="output-scanned-problem-tno" class="block text-xs font-bold text-red-400 uppercase mb-2">5c. Scanned Flagged Packages (TNO : Reason)</label>
                                 <textarea 
                                     id="output-scanned-problem-tno" 
                                     rows="4" 
@@ -235,7 +235,7 @@
                                     placeholder="None yet."
                                 ></textarea>
                                 <button onclick="copyOutput('output-scanned-problem-tno')" id="copy-scanned-problem-button" class="mt-2 w-full py-2 bg-red-700/80 hover:bg-red-600 text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    <span class="btn-label">Copy Scanned Problem TNOs (0)</span>
+                                    <span class="btn-label">Copy Scanned Flagged TNOs (0)</span>
                                 </button>
                             </div>
                         </div>
@@ -386,7 +386,7 @@
         }
 
         function clearAllInputs() {
-            // FIX 2: Ensure all state is reset before calling processAllOutputs to update UI
+            // Ensure all state is reset before calling processAllOutputs to update UI
             
             // Clear inputs
             inputEl.value = '';
@@ -404,7 +404,7 @@
             statusBar.classList.add('bg-gray-800/80', 'text-purple-400', 'border-purple-500');
             statusBar.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span>👀 WAITING FOR SCAN...</span>`;
+                    <span>👀 WAITING FOR SCAN...</span>`;
 
             // Call processAllOutputs to update all output fields and button states based on empty input
             processAllOutputs();
@@ -463,23 +463,27 @@
                 // 4. Check for Mail Innovations (MI)
                 const isMi = tno.startsWith('MI');
                 if (isMi) {
-                    isProblem = true;
-                    // Note: We prioritize the problem codes if they exist, but always mark MI as a problem
-                    if (!problemReason) {
-                        problemReason = 'MI package';
-                    } else {
-                        // If it's MI and already has a reason, we just ensure MI is the final reason
-                        problemReason += ' | MI package';
-                    }
+                    // Update problemReason to include MI
+                    problemReason += problemReason ? ` | MI package` : 'MI package';
                 }
                 
                 // Finalize Problem Status
-                if (isProblem) {
+                let hasNonMiProblem = driverMatch || stateMatch || (scanMatch && parseInt(scanMatch[1], 10) >= 3);
+                
+                if (hasNonMiProblem) {
+                    // If it has a non-MI problem, it's a Section 3 problem.
                     problemTNOsSet.add(tno);
                     problemTNOsArray.push(tno);
-                    // Store the reason for later use in Section 5c and Lookup
-                    problemTNOReasons.set(tno, problemReason);
+                    
+                    // We need to ensure the reason is always stored in the map
+                    if (problemReason) {
+                        problemTNOReasons.set(tno, problemReason);
+                    }
+                } else if (isMi) {
+                    // If it is MI-only, just store the reason. Do NOT add to problemTNOsSet.
+                    problemTNOReasons.set(tno, 'MI package');
                 }
+
 
                 if (isMi) {
                     let bracketMatch = data.match(MI_PRIORITY_REGEX);
@@ -492,7 +496,7 @@
                     miPackages.push(outputLine);
                 }
             });
-
+            
             outputAllEl.value = [...new Set(allTNOsArray)].join('\n');
             updateButton(copyAllBtn, 'All TNOs', allTNOsArray.length);
 
@@ -534,31 +538,36 @@
             }
             
             if (lastTNO) {
-                // B. MI Package Highlight & Status Logic
+                // Determine if it's a "Flagged" TNO (MI or Section 3 problem)
                 const isMi = lastTNO.startsWith('MI');
-                const isProblem = problemTNOsSet.has(lastTNO);
-                
-                // Get the reason for this TNO if it exists
                 const reason = problemTNOReasons.get(lastTNO);
+                const isFlagged = !!reason; // True if it has a reason (MI-only or other problem)
+                
+                // isRealProblem is true if it's in the Section 3 list (non-MI only OR MI + problem)
+                const isRealProblem = problemTNOsSet.has(lastTNO); 
+                
+                // isMiOnly means it's an MI package and does NOT have a real problem
+                const isMiOnly = isMi && reason === 'MI package';
 
                 if (!fullManifestTNOs.has(lastTNO)) {
-                    // STATUS: NOT IN LIST (INDIGO/BLUE) - Less severe color
+                    // STATUS: NOT IN LIST (INDIGO/BLUE) - Same
                     statusBar.classList.add('bg-indigo-900/80', 'text-indigo-300', 'border-indigo-500');
                     statusBar.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         <span>ℹ️ NOT IN LIST: ${lastTNO}</span>`;
-                } else if (isMi) {
-                     // STATUS: MI (YELLOW)
-                    statusBar.classList.add('bg-yellow-500', 'text-black', 'border-yellow-300'); // Yellow highlight for problem/MI
-                    statusBar.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
-                        <span>⚠️ MI PACKAGE: ${lastTNO}</span>`;
-                } else if (isProblem) {
-                    // STATUS: PROBLEM (YELLOW) - For non-MI problems
+                } else if (isRealProblem) {
+                     // STATUS: TRUE PROBLEM (YELLOW) - Non-MI Problem OR MI + Problem
+                    const statusPrefix = isMi ? 'MI PROBLEM' : 'PROBLEM';
                     statusBar.classList.add('bg-yellow-500', 'text-black', 'border-yellow-300');
                     statusBar.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                        <span>⚠️ PROBLEM: ${lastTNO} (${reason})</span>`; // Display reason on scan
+                        <span>⚠️ ${statusPrefix}: ${lastTNO} (${reason})</span>`; // Display reason on scan
+                } else if (isMiOnly) {
+                    // STATUS: MI ONLY (TEAL) - Distinct highlight for non-problem UPS
+                    statusBar.classList.add('bg-teal-600/80', 'text-white', 'border-teal-400');
+                    statusBar.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                        <span>📦 MI PACKAGE: ${lastTNO}</span>`; 
                 } else {
                     // STATUS: OK (GREEN)
                     statusBar.classList.add('bg-green-600', 'text-white', 'border-green-400');
@@ -574,22 +583,27 @@
 
                 outputScannedProblemEl.value = 'None yet.';
                 updateButton(copyRemainingBtn, 'Remaining TNOs', 0);
-                updateButton(copyScannedProblemBtn, 'Scanned Problem TNOs', 0);
+                updateButton(copyScannedProblemBtn, 'Scanned Flagged TNOs', 0);
                 return;
             }
-
+            
             fullManifestTNOs.forEach(tno => {
-                const isProblem = problemTNOsSet.has(tno);
+                // isRealProblem uses the problemTNOsSet which excludes MI-only
+                const isRealProblem = problemTNOsSet.has(tno); 
+                // isFlaggedForReason includes MI-only packages for 5c logging
+                const isFlaggedForReason = problemTNOReasons.has(tno); 
                 const isScanned = scannedTNOs.has(tno);
 
                 if (!isScanned) {
-                    if (isProblem) {
+                    if (isRealProblem) { 
+                        // Only alarm (🚨) if it's a true problem (non-MI only or MI + problem)
                         remainingProblems.push(`🚨 ${tno}`);
                     } else {
+                        // MI-only packages fall here and are listed normally.
                         remainingNormal.push(tno);
                     }
-                } else if (isScanned && isProblem) {
-                    // Collect TNO and Reason for Section 5c
+                } else if (isScanned && isFlaggedForReason) {
+                    // Collect TNO and Reason for Section 5c if scanned and flagged (including MI-only)
                     const reason = problemTNOReasons.get(tno) || 'Unknown Problem';
                     scannedProblemOutputLines.push(`${tno} : ${reason}`);
                 }
@@ -612,7 +626,8 @@
                  outputScannedProblemEl.value = 'None yet.';
             }
 
-            updateButton(copyScannedProblemBtn, 'Scanned Problem TNOs', scannedProblemOutputLines.length);
+            // --- MODIFIED: Update button label to "Flagged TNOs" ---
+            updateButton(copyScannedProblemBtn, 'Scanned Flagged TNOs', scannedProblemOutputLines.length);
         }
 
         // NEW: Function to handle the TNO lookup
@@ -622,19 +637,21 @@
             // Clear previous output if input is empty
             if (tno.length === 0) {
                 lookupOutputEl.value = "Start typing or paste a TNO...";
+                lookupOutputEl.className = "w-full p-3 bg-gray-950/50 text-yellow-300 font-mono text-base rounded-lg border border-yellow-900/30 resize-none focus:outline-none";
                 return;
             }
             
-            // 1. Check if it's a known problem TNO
+            // 1. Check if it's a known problem TNO (MI or other problem)
             const reason = problemTNOReasons.get(tno);
 
             if (reason) {
-                lookupOutputEl.value = `STATUS: PROBLEM (Reason: ${reason})`;
+                const statusType = reason === 'MI package' ? 'MI PACKAGE' : 'PROBLEM';
+                lookupOutputEl.value = `STATUS: ${statusType} (Reason: ${reason})`;
                 lookupOutputEl.className = "w-full p-3 bg-gray-950/50 text-yellow-300 font-mono text-base rounded-lg border border-yellow-500/50 resize-none focus:outline-none";
                 return;
             }
             
-            // 2. Check if it's in the manifest but NOT a problem
+            // 2. Check if it's in the manifest but NOT flagged (OK)
             if (fullManifestTNOs.has(tno)) {
                 lookupOutputEl.value = "STATUS: OK (Package is on manifest and not flagged as a problem).";
                  lookupOutputEl.className = "w-full p-3 bg-gray-950/50 text-green-400 font-mono text-base rounded-lg border border-green-500/50 resize-none focus:outline-none";
