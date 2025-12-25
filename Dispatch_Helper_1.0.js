@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         UniUni Dispatch Beta
 // @namespace    http://tampermonkey.net/
-// @version      10.1
+// @version      1.0
 // @description  Extract tracking numbers with a draggable interface
 // @author       Peiran C.
 // @match        https://dispatch.uniuni.site/*
