@@ -2,7 +2,7 @@
 // @name         UniUni Dispatch Beta
 // @namespace    http://tampermonkey.net/
 // @version      1.0
-// @description  Extract tracking numbers with a draggable interface
+// @description  Assist Scanning and Extract tracking numbers with a draggable interface
 // @author       Peiran C.
 // @match        https://dispatch.uniuni.site/*
 // @grant        GM_setClipboard
